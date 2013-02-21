@@ -1,0 +1,22 @@
+Hooks for J to talk to libFLANN.
+
+This should presently be considered "broken" until more features have been tested.
+It does, however, work, when you feed it the right set of parameters. FLANN is pretty effective: I'm impressed. 
+It assumes you have libflann compiled and in your temp directory (why doesn't J look in /usr/local/lib? it is 
+a mystery!).
+
+If you don't have a favorite set of near neighbors to test:
+
+load'flann.ijs'
+floatrand=: ?@$ % ] - 1:
+dataset=: 1E5 10 $ 10e3 floatrand 100 NB. note where the near neighbors will be in this create
+test=: 1E3 10 $ 1e4 floatrand 100
+((1;2.2-2.2) setparams 'typetree';'eps') allsearch dataset;test;3
+
+I would also like to have the ability to query pre-created trees, using the commented out functions in this script
+(aka buildtree and searchtree). So far, the functions using pre-sorted trees don't work. I have no idea what J 
+does to raw pointers like that, or for that matter, if FLANN is allocating on the stack or something weird like that.
+
+There are several other spatial trees in C which I have been attempting to get to function reliably; I'll stick them 
+in here as I get them working.
+
