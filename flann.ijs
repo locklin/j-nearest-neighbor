@@ -34,7 +34,7 @@ NB. The params struct looks like this:
 NB.    enum flann_algorithm_t algorithm; /* the algorithm to use 0=linear, 1=kdtree, 2=mixed, 3=*/
 NB. enum flann_algorithm_t
 NB. {
-NB.     FLANN_INDEX_LINEAR 			= 0,
+NB.     FLANN_INDEX_LINEAR   		= 0,
 NB.     FLANN_INDEX_KDTREE 			= 1,
 NB.     FLANN_INDEX_KMEANS 			= 2,
 NB.     FLANN_INDEX_COMPOSITE 		= 3,
@@ -184,17 +184,8 @@ NB. flann_free_index(TREE,params)
 
 NB. dyad version takes output of setparams
 allsearch=: 3 : 0
-'dataset testset nn'=. y  
 params=.>setflannparams >DEFAULT
-'rows cols'=. $ dataset
-trows=. #testset
-index=. 0*i.trows,nn
-dists=. _<. (trows,nn) $ 0 NB. trick for making doubles 
-cmd=. LIBFLANN, ' flann_find_nearest_neighbors x *f i i *f i *i *f i x'
-cmd cd dataset;rows;cols;testset;trows;index;dists;nn;params
-NB. flann_find_nearest_neighbors_double(double* dataset, int rows,int cols, double* testset, int trows, int* indices,
-NB. double* dists,int nn, struct FLANNParameters* flann_params);
-index;dists
+params allsearch y
 :
 'dataset testset nn'=. y  
 params=.> x
@@ -208,7 +199,7 @@ index;dists
 )
 
 
-NB. remove this from final
+NB. remove this from final when everything else works
 checkparams=: 3 : 0
 pointrd =. LIBFLANN, ' scott_dump_params n x'
 pointrd cd y
