@@ -2,18 +2,16 @@ coclass 'jflann'
 
 NB. remaining issues:
 NB. cant set branch weight except manually
-NB. searching on the pointer doesn't work
-NB. may be possible to use memr or coinsert
 
 flannparamset_z_ =: setflannparams_jflann_
-NB. buildtree_z_=: buildtree_jflann_
-NB. searchtree_z_=: searchtree_jflann_ 
-NB. treedestroy_z_ =: flanndestroy_jflann_
+buildtree_z_=: buildtree_jflann_
+searchtree_z_=: searchtree_jflann_ 
+choptree_z_ =: destroytree_jflann_
 allsearch_z_ =: allsearch_jflann_
 flannparams_z_ =: DEFAULT_jflann_
 flannparamnames_z_ =: PARAMNAMES_jflann_
 setparams_z_ =: setparams_jflann_
-tests_z_ =: buildandsearch_jflann_
+
 
 3 : 0''
 if. UNAME-:'Linux' do.
@@ -21,20 +19,21 @@ if. UNAME-:'Linux' do.
   NB. should find it in /usr/local/lib/
 elseif. UNAME-:'Darwin' do.
   LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.dylib'
+elseif. UNAME-: 'Win' do.
+ 'platform not supported' 13!:8[10
 elseif. do.
-  LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.so', (IF64#'_64'), '.dll'
+NB. for eventual package inclusion LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.so', (IF64#'_64'), '.dll'
 end.
 )
 
 
 cd=: 15!:0
 
-
 NB. The params struct looks like this:
 NB.    enum flann_algorithm_t algorithm; /* the algorithm to use 0=linear, 1=kdtree, 2=mixed, 3=*/
 NB. enum flann_algorithm_t
 NB. {
-NB.     FLANN_INDEX_LINEAR   		= 0,
+NB.     FLANN_INDEX_LINEAR 			= 0,
 NB.     FLANN_INDEX_KDTREE 			= 1,
 NB.     FLANN_INDEX_KMEANS 			= 2,
 NB.     FLANN_INDEX_COMPOSITE 		= 3,
@@ -74,84 +73,88 @@ DEFAULT =: 1;_1;0.01;1;_1;1;1;1;32;11;0;_1;0.9;0.01;0;0.1;12;20;0;5;1
 NB. this needs some kind of associative array, or I'm going to lose
 NB. my marbles -look at primitives in the add on to see how it is done
 
-PARAMNAMES=: 'typetree';'checks';'eps';'sorted';'maxnbhs';'cores';'trees';'mxleaf';'branching';'iterations';'centers';'cbdx';'prec';'bwt';'mwt';'sfrac';'loglevel';'seed'
+PARAMNAMES=: 'typetree';'checks';'eps';'sorted';'maxnbhs';'cores';'trees';'mxleaf';'branching';'iterations';'centers';'cbdx';'prec';'bwt';'mwt';'sfrac';'tnum';'ksz';'mpl';'loglevel';'seed'
 
 NB. returns a pointer to the flannparamstruct
 setparams=: 4 : 0
-tags=.y
-vals=. x
-tmpdef=. DEFAULT
-u =. I. tags e. PARAMNAMES
-ui =. PARAMNAMES i. (I. tags e. PARAMNAMES){tags
-setflannparams (vals ui}DEFAULT)
+ tags=.y
+ vals=. x
+ tmpdef=. DEFAULT
+ ui =. PARAMNAMES i. (I. tags e. PARAMNAMES){tags
+ setflannparams (vals ui}DEFAULT)
 )
-
-   
-setflannparams=: 3 : 0
-'algo checks eps sorted maxnb cores trees mxleaf bra iter clst cbdx tp bwt mwt sf nhsh kl mp verbos seed'=.y
-mymem=. mema 88
-(2 ic algo) memw mymem,0 4 2 NB. algo
-(2 ic checks) memw mymem, 4 4 2 NB. checks
-(1 fc eps) memw mymem, 8 4 2 NB. eps
-(2 ic sorted) memw mymem, 12 4 2 NB. sorted
-(2 ic maxnb) memw mymem, 16 4 2 NB. mxnb for rad search
-(2 ic cores) memw mymem, 20 4 2 NB. cores
-(2 ic trees) memw mymem, 24 4 2 NB. trees
-(2 ic mxleaf) memw mymem, 28 4 2 NB. max leaf
-(2 ic bra) memw mymem, 32 4 2 NB. branching for kmeans
-(2 ic iter) memw mymem, 36 4 2 NB. iterations
-(2 ic clst) memw mymem, 40 4 2 NB. enum clusters init
-(1 fc cbdx) memw mymem, 44 4 2 NB. cb index for kmeans
-(1 fc tp) memw mymem, 48 4 2 NB. -1, or target precision
-(1 fc 0.01) memw mymem, 52 4 2 NB. build tree weight factor why this not set?
-(1 fc mwt) memw mymem, 56 4 2 NB. index memory weight factor
-(1 fc sf) memw mymem, 60 4 2 NB. sample fraction for autotuning
-(2 ic nhsh) memw mymem, 64 4 2 NB. num hash tables
-(2 ic kl) memw mymem, 68 4 2 NB. keylength
-(2 ic mp) memw mymem, 72 4 2 NB. 0 mprobe level
-(2 ic verbos) memw mymem, 76 4 2 NB. long verbosity
-(3 ic seed) memw mymem, 80 8 2 NB. long randseed
-<mymem
-)
-
 
 
 getflannparams=: 3 : 0
 NB. 'algo checks eps sorted maxnb cores trees mxleaf bra iter clst cbdx tp bwt mwt sf nhsh kl mp verbos seed'=.y
-mymem=: >y
-algo=: _2 ic memr mymem,0 4 2 NB. algo
-checks=: _2 ic memr mymem, 4 4 2 NB. checks
-eps=: _1 fc memr mymem, 8 4 2 NB. eps
-sorted=:_2 ic memr mymem, 12 4 2 NB. sorted
-maxnb =: _2 ic memr mymem, 16 4 2 NB. mxnb for rad search
-cores =: _2 ic memr mymem, 20 4 2 NB. cores
-trees =: _2 ic memr mymem, 24 4 2 NB. trees
-mxleaf =: _2 ic memr mymem, 28 4 2 NB. max leaf
-bra =: _2 ic memr mymem, 32 4 2 NB. branching for kmeans
-iter =: _2 ic memr mymem, 36 4 2 NB. iterations
-clst =: _2 ic memr mymem, 40 4 2 NB. enum clusters init
-cbdx =: _1 fc memr mymem, 44 4 2 NB. cb index for kmeans
-tp =: _1 fc memr mymem, 48 4 2 NB. -1, or target precision
-bwt =: _1 fc memr mymem, 52 4 2 NB. build tree weight factor
-mwt =: _1 fc memr mymem, 56 4 2 NB. index memory weight factor
-sf =: _1 fc memr mymem, 60 4 2 NB. sample fraction for autotuning
-nhsh =: _2 ic memr mymem, 64 4 2 NB. num hash tables
-kl =: _2 ic memr mymem, 68 4 2 NB. keylength
-mp =: _2 ic memr mymem, 72 4 2 NB. 0 mprobe level
-verbos =: _2 ic memr mymem, 76 4 2 NB. long verbosity
-seed =: _3 ic memr mymem, 80 8 2 NB. long randseed
-algo;checks;eps;sorted;maxnb;cores;trees;mxleaf;bra;iter;clst;cbdx;tp;bwt;mwt;sf;nhsh;kl;mp;verbos;seed
+ mymem=. >y
+ algo=. _2 ic memr mymem,0 4 2 NB. algo
+ checks=. _2 ic memr mymem, 4 4 2 NB. checks
+ eps=. _1 fc memr mymem, 8 4 2 NB. eps
+ sorted=._2 ic memr mymem, 12 4 2 NB. sorted
+ maxnb =. _2 ic memr mymem, 16 4 2 NB. mxnb for rad search
+ cores =. _2 ic memr mymem, 20 4 2 NB. cores
+ trees =. _2 ic memr mymem, 24 4 2 NB. trees
+ mxleaf =. _2 ic memr mymem, 28 4 2 NB. max leaf
+ bra =. _2 ic memr mymem, 32 4 2 NB. branching for kmeans
+ iter =. _2 ic memr mymem, 36 4 2 NB. iterations
+ clst =. _2 ic memr mymem, 40 4 2 NB. enum clusters init
+ cbdx =. _1 fc memr mymem, 44 4 2 NB. cb index for kmeans
+ tp =. _1 fc memr mymem, 48 4 2 NB. -1, or target precision
+ bwt =. _1 fc memr mymem, 52 4 2 NB. build tree weight factor
+ mwt =. _1 fc memr mymem, 56 4 2 NB. index memory weight factor
+ sf =. _1 fc memr mymem, 60 4 2 NB. sample fraction for autotuning
+ nhsh =. _2 ic memr mymem, 64 4 2 NB. num hash tables
+ kl =. _2 ic memr mymem, 68 4 2 NB. keylength
+ mp =. _2 ic memr mymem, 72 4 2 NB. 0 mprobe level
+ verbos =. _2 ic memr mymem, 76 4 2 NB. long verbosity
+ seed =. _3 ic memr mymem, 80 8 2 NB. long randseed
+ algo;checks;eps;sorted;maxnb;cores;trees;mxleaf;bra;iter;clst;cbdx;tp;bwt;mwt;sf;nhsh;kl;mp;verbos;seed
+)
+
+   
+setflannparams=: 3 : 0
+ 'algo checks eps sorted maxnb cores trees mxleaf bra iter clst cbdx tp bwt mwt sf nhsh kl mp verbos seed'=.y
+ mymem=. mema 88
+ (2 ic algo) memw mymem,0 4 2 NB. algo
+ (2 ic checks) memw mymem, 4 4 2 NB. checks
+ (1 fc eps) memw mymem, 8 4 2 NB. eps
+ (2 ic sorted) memw mymem, 12 4 2 NB. sorted
+ (2 ic maxnb) memw mymem, 16 4 2 NB. mxnb for rad search
+ (2 ic cores) memw mymem, 20 4 2 NB. cores
+ (2 ic trees) memw mymem, 24 4 2 NB. trees
+ (2 ic mxleaf) memw mymem, 28 4 2 NB. max leaf
+ (2 ic bra) memw mymem, 32 4 2 NB. branching for kmeans
+ (2 ic iter) memw mymem, 36 4 2 NB. iterations
+ (2 ic clst) memw mymem, 40 4 2 NB. enum clusters init
+ (1 fc cbdx) memw mymem, 44 4 2 NB. cb index for kmeans
+ (1 fc tp) memw mymem, 48 4 2 NB. -1, or target precision
+ (1 fc 0.01) memw mymem, 52 4 2 NB. build tree weight factor why this not set?
+ (1 fc mwt) memw mymem, 56 4 2 NB. index memory weight factor
+ (1 fc sf) memw mymem, 60 4 2 NB. sample fraction for autotuning
+ (2 ic nhsh) memw mymem, 64 4 2 NB. num hash tables
+ (2 ic kl) memw mymem, 68 4 2 NB. keylength
+ (2 ic mp) memw mymem, 72 4 2 NB. 0 mprobe level
+ (2 ic verbos) memw mymem, 76 4 2 NB. long verbosity
+ (3 ic seed) memw mymem, 80 8 2 NB. long randseed
+ <mymem
 )
 
 
+
+
+
 buildtree=: 3 : 0
-'dataset'=.y
-'rows cols' =. $ dataset
-params=.>setflannparams >DEFAULT
-speedup =. 1 fc 2.2-2.2
-cmd=. LIBFLANN, ' flann_build_index * *f i i *f x'
-tree=. 0 pick cmd cd dataset;rows;cols;speedup;params
-tree
+ params=.>setflannparams >DEFAULT
+ params buildtree y
+:
+ params=.>x
+ 'dataset'=.y
+ 'rows cols' =. $ dataset
+ speedup =. 1 fc 2.2-2.2
+ cmd=. LIBFLANN, ' flann_build_index_double * *d i i *f x'
+ tree=. 0 pick cmd cd dataset;rows;cols;speedup;params
+ tree
 )
 
 
@@ -159,49 +162,64 @@ NB. tree searchtree data nn
 NB. returns boxed set of nns and dists
 NB. I have no idea why this is wrong....
 searchtree=: 3 : 0
-'tree sdata nn'=.y
-params=.>setflannparams >DEFAULT
-trows=. #sdata
-index=. 0*i.trows,nn
-dists=. _<. (trows,nn) $ 0 NB. t
-cmd=. LIBFLANN, ' flann_find_nearest_neighbors_index i x *f i *i *f i x'
-cmd cd tree;sdata;trows;index;dists;nn;params
-index;dists
+ params=.>setflannparams >DEFAULT
+ params searchtree y
+:
+ params=.>x
+ 'tree sdata nn'=.y
+ trows=. #sdata
+ index=. 0*i.trows,nn
+ dists=. _<. (trows,nn) $ 0 NB. t
+ cmd=. LIBFLANN, ' flann_find_nearest_neighbors_index_double i x *d i *i *d i x'
+ cmd cd tree;sdata;trows;index;dists;nn;params
+ index;dists
 )
 
-NB. why this doesn't work is beyond my powers. It works in C. 
-buildandsearch=: 3 : 0
-'dataset testset nn'=. y  
-tree=. buildtree dataset
-searchtree tree;testset;nn
+NB. dumptree tree params filename
+dumptree=: 3 : 0
+ 'tree params filename'=.y
+ cmd=. LIBFLANN, ' flann_save_index_double i x c'
+ cmd cd tree;params;filename
+)
+
+readtree=: 3 : 0 
+ 'filename data' =. y
+ 'rows cols' =. $ data
+ cmd=. LIBFLANN, ' flann_load_index_double x c x i i'
+ 0 pick cmd cd filename;data;rows;cols
 )
 
 
 destroytree=: 3 : 0
-NB. this deallocates memory managed by J I think; anyway, it crashes things
-NB. flann_free_index(TREE,params)
+ NB. flann_free_index(TREE,params)
+ 'tree' =. y
+ params=.>setflannparams >DEFAULT
+ cmd=. LIBFLANN, ' flann_free_index_double i x x'
+ cmd cd tree;params
 )
 
 NB. dyad version takes output of setparams
 allsearch=: 3 : 0
-params=.>setflannparams >DEFAULT
-params allsearch y
+ params=.>setflannparams >DEFAULT
+ params allsearch y
 :
-'dataset testset nn'=. y  
-params=.> x
-'rows cols'=. $ dataset
-trows=. #testset
-index=. 0*i.trows,nn
-dists=. _<. (trows,nn) $ 0 NB. trick for making doubles 
-cmd=. LIBFLANN, ' flann_find_nearest_neighbors x *f i i *f i *i *f i x'
-cmd cd dataset;rows;cols;testset;trows;index;dists;nn;params
-index;dists
+ 'dataset testset nn'=. y  
+ params=.> x
+ 'rows cols'=. $ dataset
+ trows=. #testset
+ index=. 0*i.trows,nn
+ dists=. _<. (trows,nn) $ 0 NB. trick for making doubles 
+ cmd=. LIBFLANN, ' flann_find_nearest_neighbors x *f i i *f i *i *f i x'
+ cmd cd dataset;rows;cols;testset;trows;index;dists;nn;params
+ index;dists
 )
 
 
 NB. remove this from final when everything else works
 checkparams=: 3 : 0
-pointrd =. LIBFLANN, ' scott_dump_params n x'
-pointrd cd y
-''
+ pointrd =. LIBFLANN, ' scott_dump_params n x'
+ pointrd cd y
+ ''
 )
+
+
