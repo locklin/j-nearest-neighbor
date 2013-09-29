@@ -1,5 +1,11 @@
 coclass 'jflann'
 
+NB. ToDo: 
+NB. 1) figure out a way to do the search on a more
+NB. memory efficient type (float, char)
+NB. 2) Perhaps some benchmarking with different kinds of trees
+NB. LSH for large dimensional problems, the k-means tree, etc
+NB. 
 NB. remaining issues:
 NB. cant set branch weight except manually
 
@@ -8,10 +14,11 @@ buildtree_z_=: buildtree_jflann_
 searchtree_z_=: searchtree_jflann_ 
 choptree_z_ =: destroytree_jflann_
 allsearch_z_ =: allsearch_jflann_
-flannparams_z_ =: DEFAULT_jflann_
+FLANNPARAMS_z_ =: DEFAULT_jflann_
 flannparamnames_z_ =: PARAMNAMES_jflann_
-setparams_z_ =: setparams_jflann_
-
+setparams_z_ =: setflannparams_jflann_
+dumptree_z_ =: dumptree_jflann_
+readtree_z_ =: readtree_jflann_
 
 3 : 0''
 if. UNAME-:'Linux' do.
@@ -177,15 +184,15 @@ searchtree=: 3 : 0
 
 NB. dumptree tree params filename
 dumptree=: 3 : 0
- 'tree params filename'=.y
- cmd=. LIBFLANN, ' flann_save_index_double i x c'
- cmd cd tree;params;filename
+ 'tree filename'=.y
+ cmd=. LIBFLANN, ' flann_save_index_double i x *c'
+ cmd cd tree;filename
 )
 
 readtree=: 3 : 0 
  'filename data' =. y
  'rows cols' =. $ data
- cmd=. LIBFLANN, ' flann_load_index_double x c x i i'
+ cmd=. LIBFLANN, ' flann_load_index_double x *c *d i i'
  0 pick cmd cd filename;data;rows;cols
 )
 
