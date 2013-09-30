@@ -1,13 +1,17 @@
 coclass 'jflann'
 
+NB. nearest neighbors using FLANN library
+NB. FLANN and documentation can be obtained at the following link:
+NB. http://www.cs.ubc.ca/research/flann/
+
+
+
 NB. ToDo: 
 NB. 1) figure out a way to do the search on a more
 NB. memory efficient type (float, char)
-NB. 2) Perhaps some benchmarking with different kinds of trees
-NB. LSH for large dimensional problems, the k-means tree, etc
 NB. 
 NB. remaining issues:
-NB. cant set branch weight except manually
+NB. 1) cant set branch weight except manually
 
 flannparamset_z_ =: setflannparams_jflann_
 buildtree_z_=: buildtree_jflann_
@@ -16,9 +20,13 @@ choptree_z_ =: destroytree_jflann_
 allsearch_z_ =: allsearch_jflann_
 FLANNPARAMS_z_ =: DEFAULT_jflann_
 flannparamnames_z_ =: PARAMNAMES_jflann_
-setparams_z_ =: setflannparams_jflann_
+setparams_z_ =: setparams_jflann_
 dumptree_z_ =: dumptree_jflann_
 readtree_z_ =: readtree_jflann_
+searchradius_z_ =: searchradius_jflann_
+kmeancent_z_ =: kmeans_jflann_
+NB. removept_z_ =: removept_jflann_
+NB. addpoints_z_ =: addpts_jflann_
 
 3 : 0''
 if. UNAME-:'Linux' do.
@@ -150,7 +158,8 @@ setflannparams=: 3 : 0
 
 
 
-
+NB. builds a tree for querying later
+NB. <paramstruct> buildtree data
 buildtree=: 3 : 0
  params=.>setflannparams >DEFAULT
  params buildtree y
@@ -161,48 +170,55 @@ buildtree=: 3 : 0
  speedup =. 1 fc 2.2-2.2
  cmd=. LIBFLANN, ' flann_build_index_double * *d i i *f x'
  tree=. 0 pick cmd cd dataset;rows;cols;speedup;params
- tree
+ params;tree
 )
 
 
-NB. tree searchtree data nn
+NB.  searchtree tree; newdata ;nn
 NB. returns boxed set of nns and dists
-NB. I have no idea why this is wrong....
 searchtree=: 3 : 0
- params=.>setflannparams >DEFAULT
- params searchtree y
-:
- params=.>x
- 'tree sdata nn'=.y
- trows=. #sdata
- index=. 0*i.trows,nn
- dists=. _<. (trows,nn) $ 0 NB. t
- cmd=. LIBFLANN, ' flann_find_nearest_neighbors_index_double i x *d i *i *d i x'
+ 'treeparms sdata nn'=.y
+ params =. 0 pick treeparms
+ tree =. 1 pick treeparms
+ trows =. #sdata
+ index =. 0*i.trows,nn
+ dists =. _<. (trows,nn) $ 0 NB. t
+ cmd =. LIBFLANN, ' flann_find_nearest_neighbors_index_double i x *d i *i *d i x'
  cmd cd tree;sdata;trows;index;dists;nn;params
  index;dists
 )
 
-NB. dumptree tree params filename
+
+NB. dumptree tree; filename
+NB. need to dealloc tree manually
 dumptree=: 3 : 0
- 'tree filename'=.y
+ 'treeparms filename'=.y
+ tree =: 1 pick treeparms
  cmd=. LIBFLANN, ' flann_save_index_double i x *c'
- cmd cd tree;filename
+ 0 pick cmd cd tree;filename
 )
 
+NB. reads in tree; need the data handy
+NB. readtree 'tree.file';data
 readtree=: 3 : 0 
+ params=.>setflannparams >DEFAULT
+ params readtree y
+:
+ 'params' =. x
  'filename data' =. y
  'rows cols' =. $ data
  cmd=. LIBFLANN, ' flann_load_index_double x *c *d i i'
- 0 pick cmd cd filename;data;rows;cols
+ params;0 pick cmd cd filename;data;rows;cols
 )
 
 
+NB. destroytree tree
 destroytree=: 3 : 0
- NB. flann_free_index(TREE,params)
- 'tree' =. y
- params=.>setflannparams >DEFAULT
+ 'treeparms' =. y
+ params =. 0 pick treeparms
+ tree =. 1 pick treeparms
  cmd=. LIBFLANN, ' flann_free_index_double i x x'
- cmd cd tree;params
+ 0 pick cmd cd tree;params
 )
 
 NB. dyad version takes output of setparams
@@ -221,6 +237,18 @@ allsearch=: 3 : 0
  index;dists
 )
 
+NB. untested, but it seemingly works
+searchradius =: 3 : 0
+ 'treeparm point mnn rad'=.y
+ tree=. 1 pick treeparm
+ params =. 0 pick treeparm
+ trows=. #point
+ index=. 0*i.trows,mnn
+ dists=. _<. (trows,mnn) $ 0 NB. trick for making doubles 
+ cmd=. LIBFLANN,' flann_radius_search_double i x *d *i *d i f x'
+ cmd cd tree;point;index;dists;mnn;rad;params
+ index;dists
+)
 
 NB. remove this from final when everything else works
 checkparams=: 3 : 0
@@ -229,4 +257,32 @@ checkparams=: 3 : 0
  ''
 )
 
+NB. untested, but appea
+kmeans=: 3 : 0
+ params=.>setflannparams >DEFAULT
+ params kmeans y
+:
+ 'params'=.x
+ 'data cent'=.y
+ 'rows cols'=. $ data
+ result =. _<. (cent,cols) $ 0
+ cmd=. LIBFLANN, ' flann_compute_cluster_centers_double i *d i i i *d x'
+ cmd cd data;rows;cols;cent;result;params
+ result
+)
 
+NB. the following are placeholders for online learning
+NB. need to update the templates in flann for these guys
+removept=: 3 : 0
+ 'treeparm ptloc'=.y
+ tree=. 1 pick treeparm
+ cmd=. LIBFLANN,' removePoint n x x'
+ cmd cd tree;ptloc
+)
+
+addpts =: 3 : 0
+ 'treeparm points'=.y
+ tree=. 1 pick treeparm
+ cmd=. LIBFLANN,' addPoints n x *d f'
+ cmd cd tree;points;(2.2-0.2)
+)
