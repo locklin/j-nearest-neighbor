@@ -19,8 +19,9 @@ searchtree_z_=: searchtree_jflann_
 choptree_z_ =: destroytree_jflann_
 allsearch_z_ =: allsearch_jflann_
 FLANNPARAMS_z_ =: DEFAULT_jflann_
-flannparamnames_z_ =: PARAMNAMES_jflann_
+FLANNPARAMNAMES_z_ =: PARAMNAMES_jflann_
 setparams_z_ =: setparams_jflann_
+displayparams_z_ =: PARAMNAMES_jflann_,.getflannparams_jflann_ 
 dumptree_z_ =: dumptree_jflann_
 readtree_z_ =: readtree_jflann_
 searchradius_z_ =: searchradius_jflann_
@@ -257,7 +258,7 @@ checkparams=: 3 : 0
  ''
 )
 
-NB. untested, but appea
+NB. untested, but appears to do something
 kmeans=: 3 : 0
  params=.>setflannparams >DEFAULT
  params kmeans y
@@ -272,7 +273,7 @@ kmeans=: 3 : 0
 )
 
 NB. the following are placeholders for online learning
-NB. need to update the templates in flann for these guys
+NB. need to update the templates in lib-flann for these guys
 removept=: 3 : 0
  'treeparm ptloc'=.y
  tree=. 1 pick treeparm
