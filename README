@@ -3,28 +3,10 @@ Hooks for J to talk to libFLANN.
 Tested with fresh libFLANN 1.8.4 build. 
 Doesn't work with the Ubuntu version of the library.
 
-It assumes you have libflann compiled and in your temp directory
-FLANN is pretty effective: I'm impressed. 
+It assumes you have libflann compiled and in /usr/local/lib/
 
-If you don't have a favorite set of near neighbors to test:
-
-load'flann.ijs'
-floatrand=: ?@$ % ] - 1:
-dataset=: 1E5 10 $ 10e3 floatrand 100 
-test=: 1E3 10 $ 1e4 floatrand 100
-((1;2.2-2.2) setparams 'typetree';'eps') allsearch dataset;test;3
-
-To query preallocated trees:
-
-tree=: buildtree dataset
-searchtree tree;test
-choptree tree NB. don't forget to deallocate!
-
-I haven't fully tested the deallocator, though it appears to work. There may be 
-a small memory leak in deallocating the constructor struct
 
 TODO: save trees, load trees, float and other data type trees for memory efficiency.
 
-There are several other spatial trees in C which I have been attempting to get 
-to function reliably; I'll stick them in here as I get them working.
+
 

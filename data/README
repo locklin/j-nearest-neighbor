@@ -1,0 +1,14 @@
+3d test data sets taken from ranger package
+  bust.csv  
+  fract.csv  
+  hsr.csv  
+  ra.csv  
+  spiral.csv  
+  tori.csv  
+  torus.csv  
+
+The following are transcribed from Wolberg's book on Kernel Regression
+  p53.csv
+  p79.csv
+  xxxx.csv
+
