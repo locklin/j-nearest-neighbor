@@ -13,29 +13,19 @@ NB.
 NB. remaining issues:
 NB. 1) cant set branch weight except manually
 
-NB. buildtree=: 3 : 0
-NB.  params=.>setflannparams >DEFAULT
-NB.  params buildtree y
-NB. :
-NB.  params=.>x
-NB.  'dataset'=.y
-NB.  'rows cols' =. $ dataset
-NB.  speedup =. 1 fc 2.2-2.2
-NB.  cmd=. LIBFLANN, ' flann_build_index_double * *d i i *f x'
-NB.  tree=. 0 pick cmd cd dataset;rows;cols;speedup;params
-NB.  params;tree
-NB. )
 typeof=: 3!:0 
 
 create=: 3 : 0
  PARAMS=: >setflannparams >DEFAULT
  speedup =. 1 fc 2.2-2.2
- if. 8=(typeof y) do.
-   'ROWS COLS' =: $ dataset
-   cmd=. LIBFLANN, ' flann_build_index_double * *d i i *f x'
-   TREE=: 0 pick cmd cd y;ROWS;COLS;speedup;PARAMS
+ if. 2=(typeof y) do.
+   NB. load some data from a premade tree
+   smoutput 'load a tree here'
  else.
-NB. load some data from a premade tree
+   DATASET =: y
+   'ROWS COLS' =: $ DATASET
+   cmd=. LIBFLANN, ' flann_build_index_double * *d i i *f x'
+   TREE=: 0 pick cmd cd DATASET;ROWS;COLS;speedup;PARAMS
  end.
 )
 
@@ -59,7 +49,7 @@ search=: 3 : 0
   cmd cd TREE;sdata;trows;index;dists;nn;PARAMS
   index;dists
  else.
-  smoutput 'error'
+  smoutput 'error, must be 1 or more nns'
  end. 
 )
 
@@ -256,12 +246,6 @@ allsearch=: 3 : 0
 )
 
 
-NB. remove this from final when everything else works
-checkparams=: 3 : 0
- pointrd =. LIBFLANN, ' scott_dump_params n x'
- pointrd cd y
- ''
-)
 
 NB. untested, but appears to do something
 kmeans=: 3 : 0
@@ -275,4 +259,12 @@ kmeans=: 3 : 0
  cmd=. LIBFLANN, ' flann_compute_cluster_centers_double i *d i i i *d x'
  cmd cd data;rows;cols;cent;result;params
  result
+)
+
+
+NB. remove this from final when everything else works
+checkparams=: 3 : 0
+ pointrd =. LIBFLANN, ' scott_dump_params n x'
+ pointrd cd y
+ ''
 )

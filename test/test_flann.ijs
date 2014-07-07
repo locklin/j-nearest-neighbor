@@ -7,7 +7,7 @@ aa=. ".>readcsv DATA,'p53.csv'
 test =. 0.01 + (2,3){aa 
 test1 =. 0.01 + 5{aa 
 tree=. conew 'jflann'
-create__tree aa
+create__tree (aa + 2.2-2.2)
 search__tree test1;1
 search__tree test;2
 search__tree test;3
@@ -24,15 +24,16 @@ allsearch aa;test1
 ".>readcsv DATA,'p53.csv'
 
 
-floatrand=: ?@$ % ] - 1:
-dataset=: 1E5 10 $ 10e3 floatrand 100 
+floatrand=: ?. @$ % ] - 1:
+dataset=: 1E6 10 $ 10e3 floatrand 100 
 test=: 1E3 10 $ 1e4 floatrand 100
 tree=. conew 'jflann'
 create__tree dataset
-search__tree test;1
+search__tree (1{test);1
 search__tree test;2
 search__tree test;3
-allsearch dataset;test;3
+radsearch__tree (1{test);1; 0.1
+allsearch dataset;((8,4,3){test);10
 destroy__tree''
 
 NB. all kinds of problems apparent here.... maybe it is time to go back to libANN
