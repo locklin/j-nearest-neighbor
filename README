@@ -11,6 +11,5 @@ TODO:
  - float and other data type trees for memory efficiency. 
  - round out the test script for more coverage.
  - consider storing the parameters as well as the tree
- - Get rid of "flann_stubs.ijs"
 
 

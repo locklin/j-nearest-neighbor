@@ -33,6 +33,8 @@ NB.###########################################
 NB. Object system for flann
 NB. ###########################################
 
+NB. *<(setparams)> create__tree dataset
+NB. -creates the tree, after it has been initialized with conew 'jflann'
 create=: 3 : 0
  (>setflannparams >DEFAULT) create y
 : 
@@ -62,10 +64,15 @@ destroy=: 3 : 0
 NB.  codestroy
 )
 
+NB. * paramsof__tree ''
+NB. -dumps the tree parameters
 paramsof=: 3 : 0
  PARAMNAMES ,. (getflannparams PARAMS)
 )
 
+NB. *search__tree sdata;nn
+NB. -searches the tree and returns boxed arrays with index of near neighbors 
+NB. -and distances
 search=: 3 : 0
  'sdata nn' =. y
  trows =. #,:"1 sdata
@@ -80,6 +87,9 @@ search=: 3 : 0
  end. 
 )
 
+NB. *radsearch__tree sdata;nn;radius
+NB. -searches the tree and returns boxed arrays with index of near neighbors 
+NB. -and distances within radius
 radsearch =: 3 : 0
  'point mnn rad'=.y
  trows=. #,:"1 point
@@ -90,6 +100,8 @@ radsearch =: 3 : 0
  index;dists
 )
 
+NB. *dump__tree 'dirname'
+NB. -dumps the tree and dataset in directory 'dirname'
 dump =: 3 : 0
  1!:5<y
  filename=. y,'tree'
@@ -140,12 +152,14 @@ NB. };
 
 
 DEFAULT =: 1;_1;0.01;1;_1;1;1;1;32;11;0;_1;0.9;0.01;0;0.1;12;20;0;5;1	
-NB. this needs some kind of associative array, or I'm going to lose
-NB. my marbles -look at primitives in the add on to see how it is done
 
 PARAMNAMES=: 'typetree';'checks';'eps';'sorted';'maxnbhs';'cores';'trees';'mxleaf';'branching';'iterations';'centers';'cbdx';'prec';'bwt';'mwt';'sfrac';'tnum';'ksz';'mpl';'loglevel';'seed'
 
-NB. returns a pointer to the flannparamstruct
+NB. * 2;4 setparams 'typetree';'cores'
+NB. -returns a pointer to a struct which feeds the flann library with configuration
+NB. -parameters. See the above values for a sketch of what they mean, or the
+NB. -flann manual; 
+NB. -http://www.cs.ubc.ca/research/flann/uploads/FLANN/flann_manual-1.8.4.pdf
 setparams=: 4 : 0
  tags=.y
  vals=. x
@@ -153,9 +167,8 @@ setparams=: 4 : 0
  setflannparams (vals ui}DEFAULT)
 )
 
-
-getflannparams=: 3 : 0
 NB. 'algo checks eps sorted maxnb cores trees mxleaf bra iter clst cbdx tp bwt mwt sf nhsh kl mp verbos seed'=.y
+getflannparams=: 3 : 0
  mymem=. >y
  algo=. _2 ic memr mymem,0 4 2 NB. algo
  checks=. _2 ic memr mymem, 4 4 2 NB. checks
@@ -210,8 +223,10 @@ setflannparams=: 3 : 0
 )
 
 
-
-NB. dyad version takes output of setparams
+NB. *(flannparams) allsearch data;testset;nn
+NB. -dyad version takes output of setparams. This does a near neighbor search
+NB. -without building a tree and keeping it around; for batch searches where
+NB. -the testset is available all at once.
 allsearch=: 3 : 0
  params=.>setflannparams >DEFAULT
  params allsearch y
@@ -243,10 +258,3 @@ kmeans=: 3 : 0
  result
 )
 
-
-NB. remove this from final when everything else works
-checkparams=: 3 : 0
- pointrd =. LIBFLANN, ' scott_dump_params n x'
- pointrd cd y
- ''
-)
