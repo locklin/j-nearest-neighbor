@@ -11,7 +11,7 @@ NB. should work anywhere you can get libFLANN, aka win and darwin
 )
 
 DEPENDS=: 0 : 0
-NB. eventually, maybe MI package, presently just libFLANN 1.8.4
+dsv/csv
 )
 
 DESCRIPTION=: 0 : 0
