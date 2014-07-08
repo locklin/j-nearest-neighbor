@@ -1,13 +1,13 @@
 coclass 'jflann'
 require'files'
 
+VERSION7=: 0   NB. set VERSION7 to be 0 if you installed 1.8.4 from source
 typeof=: 3!:0 
 cd=: 15!:0
 
 NB. nearest neighbors using FLANN library
 NB. FLANN and documentation can be obtained at the following link:
 NB. http://www.cs.ubc.ca/research/flann/
-NB. assumes flann-1.8.4, installed in /usr/local/lib/libflann.so
 
 NB. namespace definitions
 allsearch_z_ =: allsearch_jflann_
@@ -18,8 +18,8 @@ NB. FLANNPARAMNAMES_z_ =: PARAMNAMES_jflann_
 
 NB. path of libflann
 3 : 0''
-if. (UNAME-:'Linux') *. IF64 do.
-  LIBFLANN=: '/usr/local/lib/libflann.so'  
+if. UNAME-:'Linux' do.
+  LIBFLANN=: VERSION7{::'libflann.so.1.8';'libflann.so.1.7'
 elseif. UNAME-:'Darwin' do.
   LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.dylib'
 elseif. UNAME-: 'Win' do.
@@ -35,6 +35,7 @@ NB. ###########################################
 
 NB. *<(setparams)> create__tree dataset
 NB. -creates the tree, after it has been initialized with conew 'jflann'
+NB. -also loads saved trees if you feed it a string.
 create=: 3 : 0
  (>setflannparams >DEFAULT) create y
 : 
@@ -51,7 +52,7 @@ create=: 3 : 0
  else.
    DATASET =: y + 2.2-2.2 
    'ROWS COLS' =: $ DATASET
-   cmd=. LIBFLANN, ' flann_build_index_double * *d i i *f x'
+   cmd=. LIBFLANN, ' flann_build_index_double x *d i i *f x'
    TREE=: 0 pick cmd cd DATASET;ROWS;COLS;speedup;PARAMS
  end.
 )
@@ -168,7 +169,7 @@ setparams=: 4 : 0
 )
 
 NB. 'algo checks eps sorted maxnb cores trees mxleaf bra iter clst cbdx tp bwt mwt sf nhsh kl mp verbos seed'=.y
-getflannparams=: 3 : 0
+getflannparams8=: 3 : 0
  mymem=. >y
  algo=. _2 ic memr mymem,0 4 2 NB. algo
  checks=. _2 ic memr mymem, 4 4 2 NB. checks
@@ -194,8 +195,33 @@ getflannparams=: 3 : 0
  algo;checks;eps;sorted;maxnb;cores;trees;mxleaf;bra;iter;clst;cbdx;tp;bwt;mwt;sf;nhsh;kl;mp;verbos;seed
 )
 
-   
-setflannparams=: 3 : 0
+getflannparams7=: 3 : 0
+ mymem=. >y
+ sorted=. 1
+ maxnb=. _1
+ cores=. 1
+ algo=. _2 ic memr mymem,0 4 2 NB. algo
+ checks=. _2 ic memr mymem, 4 4 2 NB. checks
+ cbdx=. _1 fc memr mymem, 8 4 2 NB. cb_index
+ eps=. _1 fc memr mymem, 12 4 2 NB. eps
+ trees =. _2 ic memr mymem, 16 4 2 NB. trees
+ mxleaf =. _2 ic memr mymem, 20 4 2 NB. max leaf
+ bra =. _2 ic memr mymem, 24 4 2 NB. branching for kmeans
+ iter =. _2 ic memr mymem, 28 4 2 NB. iterations
+ clst =. _2 ic memr mymem, 32 4 2 NB. enum clusters init
+ tp =. _1 fc memr mymem, 36 4 2 NB. -1, or target precision
+ bwt =. _1 fc memr mymem, 40 4 2 NB. build tree weight factor
+ mwt =. _1 fc memr mymem, 44 4 2 NB. index memory weight factor
+ sf =. _1 fc memr mymem, 48 4 2 NB. sample fraction for autotuning
+ nhsh =. _2 ic memr mymem, 52 4 2 NB. num hash tables
+ kl =. _2 ic memr mymem, 56 4 2 NB. keylength
+ mp =. _2 ic memr mymem, 60 4 2 NB. 0 mprobe level
+ verbos =. _2 ic memr mymem, 64 4 2 NB. long verbosity
+ seed =. (IF64{_2 _3) ic memr mymem, (IF64{68 4,:72 8), 2 NB. long randseed
+ algo;checks;eps;sorted;maxnb;cores;trees;mxleaf;bra;iter;clst;cbdx;tp;bwt;mwt;sf;nhsh;kl;mp;verbos;seed
+)
+
+setflannparams8=: 3 : 0
  'algo checks eps sorted maxnb cores trees mxleaf bra iter clst cbdx tp bwt mwt sf nhsh kl mp verbos seed'=.y
  mymem=. mema 88
  (2 ic algo) memw mymem,0 4 2 NB. algo
@@ -226,7 +252,7 @@ NB. this should create the right struct for 1.7 version of flann, but on my
 NB. machine this library doesn't work at all
 setflannparams7=: 3 : 0
  'algo checks eps sorted maxnb cores trees mxleaf bra iter clst cbdx tp bwt mwt sf nhsh kl mp verbos seed'=.y
- mymem=. mema 76
+ mymem=. mema IF64{72 80
  (2 ic algo) memw mymem,0 4 2 NB. algo
  (2 ic checks) memw mymem, 4 4 2 NB. checks
  (1 fc cbdx) memw mymem, 8 4 2 NB. cb_index 
@@ -244,10 +270,12 @@ setflannparams7=: 3 : 0
  (2 ic kl) memw mymem, 56 4 2 NB. keylength
  (2 ic mp) memw mymem, 60 4 2 NB. 0 mprobe level
  (2 ic verbos) memw mymem, 64 4 2 NB. long verbosity
- (3 ic seed) memw mymem, 68 8 2 NB. long randseed
+ ((IF64{2 3) ic seed) memw mymem, (IF64{68 4,:72 8), 2 NB. long randseed
  <mymem
 )
 
+getflannparams=: getflannparams8`getflannparams7@.VERSION7 f.
+setflannparams=: setflannparams8`setflannparams7@.VERSION7 f.
 
 NB. *(flannparams) allsearch data;testset;nn
 NB. -dyad version takes output of setparams. This does a near neighbor search

@@ -43,16 +43,14 @@ testrads=: 3 : 0
 
 
 testbig=: 3 : 0
-  floatrand=: ?. @$ % ] - 1:
-  dataset=: 1E6 10 $ 10e3 floatrand 100 
-  test=: 1E3 10 $ 1e4 floatrand 100
+  dataset=: 1E6 10 $ ?.10e7$0
+  testdx=: 1E3 ?. 1e6
+  test=: testdx{dataset
   tree=. conew 'jflann'
   create__tree dataset
-  assert. 622001=>{.search__tree (1{test);1
-  assert. (1000,2) =$>{. search__tree test;2
-  assert. 622001=>{.radsearch__tree (1{test);1; 0.1
+  assert. testdx = ,>{.search__tree test;1
   destroy__tree''
-  assert. 42008={.{.>{.allsearch dataset;((8,4,3){test);10
+  assert. testdx = ,>{.allsearch dataset;test;1  
 )
 
 smoutput testp53''
@@ -60,17 +58,21 @@ smoutput testrads''
 smoutput testbig''
 smoutput testparams''
 
+NB. manually tested savetree; it seems to work.
+
 
 NB. something like this for the other data sets....
 NB. NB. row x on y datafile
-NB. nntest=: 4 : 0
-NB.  a=. ".>readcsv DATA,y
-NB.  t=. buildtree a
-NB.  test =. x{a
-NB.  out =. searchtree t;test;1
-NB.  choptree t
-NB.  nn=. |: >0{out
-NB.  dist=. >1{out
-NB.  NB. assert. nn = x
-NB. out
-NB. )
+nntest=: 4 : 0
+ a=. ".>readcsv DATA,y
+ t=. conew 'jflann'
+ create__t a
+ test =. x{a
+ out =. searchtree t;test;1
+ choptree t
+ nn=. |: >0{out
+ dist=. >1{out
+ assert. nn = x
+ assert. dist = 
+out
+)
