@@ -1,6 +1,6 @@
 coclass 'jflann'
-
 require'files'
+
 typeof=: 3!:0 
 cd=: 15!:0
 
@@ -18,7 +18,7 @@ NB. FLANNPARAMNAMES_z_ =: PARAMNAMES_jflann_
 
 NB. path of libflann
 3 : 0''
-if. UNAME-:'Linux' do.
+if. (UNAME-:'Linux') *. IF64 do.
   LIBFLANN=: '/usr/local/lib/libflann.so'  
 elseif. UNAME-:'Darwin' do.
   LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.dylib'
@@ -42,14 +42,14 @@ create=: 3 : 0
  speedup =. 1 fc 2.2-2.2
  if. 2=(typeof y) do.
    NB. load some data from a premade tree
-   DATASET=: 2.2-2.2+ ". freadr y,'data'
+   DATASET=: (". freadr y,'data') + 2.2-2.2
    filename=. y,'tree'
    'ROWS COLS'=: $ DATASET
    cmd=. LIBFLANN, ' flann_load_index_double x *c *d i i'
    TREE=: 0 pick cmd cd filename;DATASET;ROWS;COLS
    smoutput 'loaded a tree here'
  else.
-   DATASET =: 2.2-2.2 + y
+   DATASET =: y + 2.2-2.2 
    'ROWS COLS' =: $ DATASET
    cmd=. LIBFLANN, ' flann_build_index_double * *d i i *f x'
    TREE=: 0 pick cmd cd DATASET;ROWS;COLS;speedup;PARAMS
@@ -219,6 +219,32 @@ setflannparams=: 3 : 0
  (2 ic mp) memw mymem, 72 4 2 NB. 0 mprobe level
  (2 ic verbos) memw mymem, 76 4 2 NB. long verbosity
  (3 ic seed) memw mymem, 80 8 2 NB. long randseed
+ <mymem
+)
+
+NB. this should create the right struct for 1.7 version of flann, but on my
+NB. machine this library doesn't work at all
+setflannparams7=: 3 : 0
+ 'algo checks eps sorted maxnb cores trees mxleaf bra iter clst cbdx tp bwt mwt sf nhsh kl mp verbos seed'=.y
+ mymem=. mema 76
+ (2 ic algo) memw mymem,0 4 2 NB. algo
+ (2 ic checks) memw mymem, 4 4 2 NB. checks
+ (1 fc cbdx) memw mymem, 8 4 2 NB. cb_index 
+ (1 fc eps) memw mymem, 12 4 2 NB. eps
+ (2 ic trees) memw mymem, 16 4 2 NB. trees
+ (2 ic mxleaf) memw mymem, 20 4 2 NB. max_leaf
+ (2 ic bra) memw mymem, 24 4 2      NB. branching factor for kmeans tree
+ (2 ic iter) memw mymem, 28 4 2       NB. iterations
+ (2 ic clst) memw mymem, 32 4 2 NB. enum clusters init
+ (1 fc tp) memw mymem, 36 4 2  NB. -1, or target precision
+ (1 fc 0.01) memw mymem, 40 4 2 NB. build tree weight factor why this not set?
+ (1 fc mwt) memw mymem, 44 4 2 NB. index memory weight factor	 
+ (1 fc sf) memw mymem, 48 4 2 NB. sample fraction for autotuning 
+ (2 ic nhsh) memw mymem, 52 4 2 NB. num hash tables
+ (2 ic kl) memw mymem, 56 4 2 NB. keylength
+ (2 ic mp) memw mymem, 60 4 2 NB. 0 mprobe level
+ (2 ic verbos) memw mymem, 64 4 2 NB. long verbosity
+ (3 ic seed) memw mymem, 68 8 2 NB. long randseed
  <mymem
 )
 
