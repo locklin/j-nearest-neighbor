@@ -96,8 +96,8 @@ NB. returns a pointer to the flannparamstruct
 setparams=: 4 : 0
  tags=.y
  vals=. x
- tmpdef=. DEFAULT
  ui =. PARAMNAMES i. (I. tags e. PARAMNAMES){tags
+ tmpdef =. DEFAULT
  setflannparams (vals ui}DEFAULT)
 )
 

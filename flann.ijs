@@ -6,17 +6,25 @@ NB. http://www.cs.ubc.ca/research/flann/
 NB. assumes flann-1.8.4, installed in /usr/local/lib/libflann.so
 
 
-NB. ToDo: 
-NB. 1) figure out a way to do the search on a more
-NB. memory efficient type (float, char)
-NB. 
-NB. remaining issues:
-NB. 1) cant set branch weight except manually
+NB. flannparamset_z_ =: setflannparams_jflann_
+allsearch_z_ =: allsearch_jflann_
+NB. FLANNPARAMS_z_ =: DEFAULT_jflann_
+NB. FLANNPARAMNAMES_z_ =: PARAMNAMES_jflann_
+setparams_z_ =: setparams_jflann_
+NB. dumptree_z_ =: dumptree_jflann_
+NB. readtree_z_ =: readtree_jflann_
+kmeancent_z_ =: kmeans_jflann_
+NB. removept_z_ =: removept_jflann_
+NB. addpoints_z_ =: addpts_jflann_
+
 
 typeof=: 3!:0 
 
 create=: 3 : 0
- PARAMS=: >setflannparams >DEFAULT
+NB. PARAMS=: >setflannparams >DEFAULT
+ (>setflannparams >DEFAULT) create y
+: 
+ PARAMS=: x
  speedup =. 1 fc 2.2-2.2
  if. 2=(typeof y) do.
    NB. load some data from a premade tree
@@ -32,6 +40,8 @@ create=: 3 : 0
 destroy=: 3 : 0
  cmd=. LIBFLANN, ' flann_free_index_double i x x'
  0 pick cmd cd TREE;PARAMS
+ TREE=: ''
+ PARAMS=: ''
 NB.  codestroy
 )
 
@@ -64,16 +74,6 @@ radsearch =: 3 : 0
 )
 
 
-NB. flannparamset_z_ =: setflannparams_jflann_
-allsearch_z_ =: allsearch_jflann_
-NB. FLANNPARAMS_z_ =: DEFAULT_jflann_
-NB. FLANNPARAMNAMES_z_ =: PARAMNAMES_jflann_
-NB. setparams_z_ =: setparams_jflann_
-NB. dumptree_z_ =: dumptree_jflann_
-NB. readtree_z_ =: readtree_jflann_
-kmeancent_z_ =: kmeans_jflann_
-NB. removept_z_ =: removept_jflann_
-NB. addpoints_z_ =: addpts_jflann_
 
 3 : 0''
 if. UNAME-:'Linux' do.
@@ -141,7 +141,6 @@ NB. returns a pointer to the flannparamstruct
 setparams=: 4 : 0
  tags=.y
  vals=. x
- tmpdef=. DEFAULT
  ui =. PARAMNAMES i. (I. tags e. PARAMNAMES){tags
  setflannparams (vals ui}DEFAULT)
 )

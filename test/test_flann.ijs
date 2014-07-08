@@ -1,59 +1,76 @@
 load'tables/csv'
 load'flann.ijs'
-loc=. 3 : '> (4!:4 <''y'') { 4!:3 $0'  
-PATH=. getpath_j_ loc''
-DATA=. PATH,'data/'
-aa=. ".>readcsv DATA,'p53.csv'
-test =. 0.01 + (2,3){aa 
-test1 =. 0.01 + 5{aa 
-tree=. conew 'jflann'
-create__tree (aa + 2.2-2.2)
-search__tree test1;1
-search__tree test;2
-search__tree test;3
-paramsof__tree ''
-destroy__tree ''
-tree=. conew 'jflann'
-create__tree aa
-radsearch__tree test1;2;5
-destroy__tree ''
-
-allsearch aa;test1
-
-".>readcsv DATA,'p79.csv'
-".>readcsv DATA,'p53.csv'
-
-
-floatrand=: ?. @$ % ] - 1:
-dataset=: 1E6 10 $ 10e3 floatrand 100 
-test=: 1E3 10 $ 1e4 floatrand 100
-tree=. conew 'jflann'
-create__tree dataset
-search__tree (1{test);1
-search__tree test;2
-search__tree test;3
-radsearch__tree (1{test);1; 0.1
-allsearch dataset;((8,4,3){test);10
-destroy__tree''
-
-NB. all kinds of problems apparent here.... maybe it is time to go back to libANN
-
 NB. ##############################
 
 Note 'To run flann tests:'
-  load 'flann'
-  load 'flann/test/test_flann'
+  load 'flann.ijs'
+  load 'test/test_flann.ijs'
 )
 
-NB. row x on y datafile
-nntest=: 4 : 0
- a=. ".>readcsv DATA,y
- t=. buildtree a
- test =. x{a
- out =. searchtree t;test;1
- choptree t
- nn=. |: >0{out
- dist=. >1{out
- NB. assert. nn = x
-out
+loc=. 3 : '> (4!:4 <''y'') { 4!:3 $0'  
+PATH=: getpath_j_ loc''
+DATA=: PATH,'../data/'
+aa=: ".>readcsv DATA,'p53.csv'
+test =: 0.01 + (2,3){aa 
+test1 =: 0.01 + 5{aa 
+
+testp53=: 3 : 0
+  tree=. conew 'jflann'
+  create__tree (aa + 2.2-2.2)
+  assert. 5=>{.search__tree test1;1
+  assert. (3,9)={:>{.search__tree test;2
+  assert. (2,8,0)={.>{.search__tree test;3
+  assert. 0.0003={.{.>{:search__tree test;3
+  assert. 32=>{:8{paramsof__tree '' 
+  destroy__tree ''
 )
+
+testparams=: 3 : 0
+   tree=. conew 'jflann'
+   ((<4) setparams <'typetree') create__tree (aa + 2.2 -2.2)
+   assert. 4=>{:{. paramsof__tree''
+   destroy__tree ''
+)
+
+testrads=: 3 : 0
+  tree=. conew 'jflann'
+  create__tree aa + 2.2-2.2
+  assert. (5,_1)= {. >{.radsearch__tree test1;2;5
+  assert. 2={.>{.radsearch__tree test;1;5
+  destroy__tree ''
+  assert. (5,6,9)={.>{.allsearch aa;test1;3
+)
+
+
+testbig=: 3 : 0
+  floatrand=: ?. @$ % ] - 1:
+  dataset=: 1E6 10 $ 10e3 floatrand 100 
+  test=: 1E3 10 $ 1e4 floatrand 100
+  tree=. conew 'jflann'
+  create__tree dataset
+  assert. 622001=>{.search__tree (1{test);1
+  assert. (1000,2) =$>{. search__tree test;2
+  assert. 622001=>{.radsearch__tree (1{test);1; 0.1
+  destroy__tree''
+  assert. 42008={.{.>{.allsearch dataset;((8,4,3){test);10
+)
+
+smoutput testp53''
+smoutput testrads''
+smoutput testbig''
+smoutput testparams''
+
+
+NB. something like this for the other data sets....
+NB. NB. row x on y datafile
+NB. nntest=: 4 : 0
+NB.  a=. ".>readcsv DATA,y
+NB.  t=. buildtree a
+NB.  test =. x{a
+NB.  out =. searchtree t;test;1
+NB.  choptree t
+NB.  nn=. |: >0{out
+NB.  dist=. >1{out
+NB.  NB. assert. nn = x
+NB. out
+NB. )

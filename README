@@ -4,10 +4,12 @@ Tested with fresh libFLANN 1.8.4 build.
 Doesn't work with the Ubuntu version of the library.
 
 It assumes you have libflann compiled and in /usr/local/lib/
-
+libFLANN is available here:
+http://www.cs.ubc.ca/research/flann/
 
 TODO: save trees, load trees, float and other data type trees for 
-memory efficiency.
+memory efficiency. Get rid of "flann_stubs.ijs"
+Also, round out the test script for more coverage.
 
 
 
