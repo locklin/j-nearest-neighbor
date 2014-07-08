@@ -26,10 +26,10 @@ testp53=: 3 : 0
 )
 
 testparams=: 3 : 0
-   tree=. conew 'jflann'
-   ((<4) setparams <'typetree') create__tree (aa + 2.2 -2.2)
-   assert. 4=>{:{. paramsof__tree''
-   destroy__tree ''
+  tree=. conew 'jflann'
+  ((<4) setparams <'typetree') create__tree (aa + 2.2 -2.2)
+  assert. 4=>{:{. paramsof__tree''
+  destroy__tree ''
 )
 
 testrads=: 3 : 0

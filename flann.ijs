@@ -1,36 +1,53 @@
 coclass 'jflann'
 
+require'files'
+typeof=: 3!:0 
+cd=: 15!:0
+
 NB. nearest neighbors using FLANN library
 NB. FLANN and documentation can be obtained at the following link:
 NB. http://www.cs.ubc.ca/research/flann/
 NB. assumes flann-1.8.4, installed in /usr/local/lib/libflann.so
 
-
-NB. flannparamset_z_ =: setflannparams_jflann_
+NB. namespace definitions
 allsearch_z_ =: allsearch_jflann_
+setparams_z_ =: setparams_jflann_
+kmeancent_z_ =: kmeans_jflann_
 NB. FLANNPARAMS_z_ =: DEFAULT_jflann_
 NB. FLANNPARAMNAMES_z_ =: PARAMNAMES_jflann_
-setparams_z_ =: setparams_jflann_
-NB. dumptree_z_ =: dumptree_jflann_
-NB. readtree_z_ =: readtree_jflann_
-kmeancent_z_ =: kmeans_jflann_
-NB. removept_z_ =: removept_jflann_
-NB. addpoints_z_ =: addpts_jflann_
 
+NB. path of libflann
+3 : 0''
+if. UNAME-:'Linux' do.
+  LIBFLANN=: '/usr/local/lib/libflann.so'  
+elseif. UNAME-:'Darwin' do.
+  LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.dylib'
+elseif. UNAME-: 'Win' do.
+  'platform not supported' 13!:8[10
+elseif. do.
+  NB. for eventual package inclusion LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.so', (IF64#'_64'), '.dll'
+end.
+)
 
-typeof=: 3!:0 
+NB.###########################################
+NB. Object system for flann
+NB. ###########################################
 
 create=: 3 : 0
-NB. PARAMS=: >setflannparams >DEFAULT
  (>setflannparams >DEFAULT) create y
 : 
  PARAMS=: x
  speedup =. 1 fc 2.2-2.2
  if. 2=(typeof y) do.
    NB. load some data from a premade tree
-   smoutput 'load a tree here'
+   DATASET=: 2.2-2.2+ ". freadr y,'data'
+   filename=. y,'tree'
+   'ROWS COLS'=: $ DATASET
+   cmd=. LIBFLANN, ' flann_load_index_double x *c *d i i'
+   TREE=: 0 pick cmd cd filename;DATASET;ROWS;COLS
+   smoutput 'loaded a tree here'
  else.
-   DATASET =: y
+   DATASET =: 2.2-2.2 + y
    'ROWS COLS' =: $ DATASET
    cmd=. LIBFLANN, ' flann_build_index_double * *d i i *f x'
    TREE=: 0 pick cmd cd DATASET;ROWS;COLS;speedup;PARAMS
@@ -54,7 +71,7 @@ search=: 3 : 0
  trows =. #,:"1 sdata
  if. nn>0 do. 
   index =. 0*i.trows,nn
-  dists =. _<. (trows,nn) $ 0 NB. t
+  dists =. _<. (trows,nn) $ 0 NB. trick for making doubles 
   cmd =. LIBFLANN, ' flann_find_nearest_neighbors_index_double i x *d i *i *d i x'
   cmd cd TREE;sdata;trows;index;dists;nn;PARAMS
   index;dists
@@ -73,23 +90,14 @@ radsearch =: 3 : 0
  index;dists
 )
 
-
-
-3 : 0''
-if. UNAME-:'Linux' do.
-  NB.  LIBFLANN=: jpath'~temp/libflann.so'
-  LIBFLANN=: '/usr/local/lib/libflann.so'  
-elseif. UNAME-:'Darwin' do.
-  LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.dylib'
-elseif. UNAME-: 'Win' do.
-  'platform not supported' 13!:8[10
-elseif. do.
-  NB. for eventual package inclusion LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.so', (IF64#'_64'), '.dll'
-end.
+dump =: 3 : 0
+ 1!:5<y
+ filename=. y,'tree'
+ cmd=. LIBFLANN, ' flann_save_index_double i x *c'
+ 0 pick cmd cd TREE;filename
+ (": DATASET) fwrites y,'data'    NB. Do this better later
 )
 
-
-cd=: 15!:0
 
 NB. The params struct looks like this:
 NB.    enum flann_algorithm_t algorithm; /* the algorithm to use 0=linear, 1=kdtree, 2=mixed, 3=*/
@@ -199,31 +207,6 @@ setflannparams=: 3 : 0
  (2 ic verbos) memw mymem, 76 4 2 NB. long verbosity
  (3 ic seed) memw mymem, 80 8 2 NB. long randseed
  <mymem
-)
-
-
-
-
-NB. dumptree tree; filename
-NB. need to dealloc tree manually
-dumptree=: 3 : 0
- 'treeparms filename'=.y
- tree =: 1 pick treeparms
- cmd=. LIBFLANN, ' flann_save_index_double i x *c'
- 0 pick cmd cd tree;filename
-)
-
-NB. reads in tree; need the data handy
-NB. readtree 'tree.file';data
-readtree=: 3 : 0 
- params=.>setflannparams >DEFAULT
- params readtree y
-:
- 'params' =. x
- 'filename data' =. y
- 'rows cols' =. $ data
- cmd=. LIBFLANN, ' flann_load_index_double x *c *d i i'
- params;0 pick cmd cd filename;data;rows;cols
 )
 
 
