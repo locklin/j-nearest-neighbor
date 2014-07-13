@@ -1,7 +1,7 @@
 coclass 'jflann'
 require'files'
 
-VERSION7=: 0   NB. set VERSION7 to be 0 if you installed 1.8.4 from source
+VERSION7=: 1   NB. set VERSION7 to be 0 if you installed 1.8.4 from source
 typeof=: 3!:0 
 cd=: 15!:0
 

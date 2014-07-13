@@ -43,8 +43,8 @@ testrads=: 3 : 0
 
 
 testbig=: 3 : 0
-  dataset=: 1E6 10 $ ?.10e7$0
-  testdx=: 1E3 ?. 1e6
+  dataset=: ". IF64{::'1e3 10 $?.1e4$0';'1e6 10 $ ?.10e7$0'
+  testdx=: ".IF64{:: '1e2?.1e3';'1e3 ?. 1e6'
   test=: testdx{dataset
   tree=. conew 'jflann'
   create__tree dataset
