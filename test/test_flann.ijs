@@ -73,6 +73,6 @@ nntest=: 4 : 0
  nn=. |: >0{out
  dist=. >1{out
  assert. nn = x
- assert. dist = 
+NB. assert. dist = 
 out
 )

@@ -36,6 +36,8 @@ NB. ###########################################
 NB. *<(setparams)> create__tree dataset
 NB. -creates the tree, after it has been initialized with conew 'jflann'
 NB. -also loads saved trees if you feed it a string.
+NB. -in the dyadic case, use (x setparams y) to set the parameters
+NB. -for different kinds of trees
 create=: 3 : 0
  (>setflannparams >DEFAULT) create y
 : 
@@ -103,6 +105,7 @@ radsearch =: 3 : 0
 
 NB. *dump__tree 'dirname'
 NB. -dumps the tree and dataset in directory 'dirname'
+NB. TODO: dump the params as well
 dump =: 3 : 0
  1!:5<y
  filename=. y,'tree'
@@ -158,8 +161,8 @@ PARAMNAMES=: 'typetree';'checks';'eps';'sorted';'maxnbhs';'cores';'trees';'mxlea
 
 NB. * 2;4 setparams 'typetree';'cores'
 NB. -returns a pointer to a struct which feeds the flann library with configuration
-NB. -parameters. See the above values for a sketch of what they mean, or the
-NB. -flann manual; 
+NB. -parameters. See the above values jflann_PARAMNAMES_ for a sketch of what 
+NB. -they mean, or the flann manual; 
 NB. -http://www.cs.ubc.ca/research/flann/uploads/FLANN/flann_manual-1.8.4.pdf
 setparams=: 4 : 0
  tags=.y
@@ -248,8 +251,7 @@ setflannparams8=: 3 : 0
  <mymem
 )
 
-NB. this should create the right struct for 1.7 version of flann, but on my
-NB. machine this library doesn't work at all
+NB. sets available params for v1.7 of libflann
 setflannparams7=: 3 : 0
  'algo checks eps sorted maxnb cores trees mxleaf bra iter clst cbdx tp bwt mwt sf nhsh kl mp verbos seed'=.y
  mymem=. mema IF64{72 80
