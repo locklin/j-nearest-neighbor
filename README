@@ -1,10 +1,9 @@
 Hooks for J to talk to libFLANN.
 
-Tested with fresh libFLANN 1.8.4 build. 
-Doesn't work with the Ubuntu version of the library.
+Tested with fresh libFLANN 1.8.4 build and 1.7.1 that 
+comes with ubuntu and debian (bonus: it works on the 
+Raspberry Pi). 
 
-It assumes you have libflann compiled and in /usr/local/lib/
-libFLANN is available here:
 http://www.cs.ubc.ca/research/flann/
 
 TODO:  
