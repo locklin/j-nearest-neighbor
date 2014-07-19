@@ -21,7 +21,8 @@ NB. path of libflann
 if. UNAME-:'Linux' do.
   LIBFLANN=: VERSION7{::'libflann.so.1.8';'libflann.so.1.7'
 elseif. UNAME-:'Darwin' do.
-  LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.dylib'
+  'platform not supported' 13!:8[10
+NB.   LIBFLANN=: '"',~'"',jpath '~addons/math/flann/libflann.dylib'
 elseif. UNAME-: 'Win' do.
   'platform not supported' 13!:8[10
 elseif. do.
