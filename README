@@ -14,9 +14,9 @@ What's it for?
 Near neighbor calculations on arrays with a modest number of features, d
 (aka columns) and a large number of rows, N is O(Nd) when done via
 brute force. 
-The default "spatial tree" method in libflann allows for more efficient search via
-a hybrid kd-tree (it also supports Locality Hashing, though I have yet to test this).
-Such searches are O(log(N))
+The default "spatial tree" method in libflann allows for more efficient 
+search using a hybrid kd-tree (it also supports Locality Hashing, though 
+I have yet to test this). Such searches are O(log(N))
 
 Usage:
 For multiple queries:
